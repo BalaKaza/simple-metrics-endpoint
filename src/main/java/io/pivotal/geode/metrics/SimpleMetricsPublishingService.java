@@ -6,12 +6,15 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.apache.http.conn.util.InetAddressUtils;
 import org.slf4j.Logger;
 
 import org.apache.geode.metrics.MetricsPublishingService;
@@ -20,7 +23,8 @@ import org.apache.geode.metrics.MetricsSession;
 public class SimpleMetricsPublishingService implements MetricsPublishingService {
   private static final String PORT_PROPERTY = "prometheus.metrics.port";
   private static final int DEFAULT_PORT = 0; // If no port specified, use any port
-  private static final String HOSTNAME = "localhost";
+  private static String HOSTNAME = "localhost";
+
   private static final int PORT = getInteger(PORT_PROPERTY, DEFAULT_PORT);
 
   private static Logger LOG = getLogger(SimpleMetricsPublishingService.class);
@@ -43,6 +47,12 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
     this.session = session;
     registry = new PrometheusMeterRegistry(DEFAULT);
     this.session.addSubregistry(registry);
+    try {
+      HOSTNAME = InetAddress.getLocalHost().getHostName();
+      System.out.println(HOSTNAME);
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
 
     InetSocketAddress address = new InetSocketAddress(HOSTNAME, port);
     server = null;
