@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.http.HttpResponse;
@@ -30,10 +32,12 @@ class SimpleMetricsPublishingServiceTest {
   private MetricsSession metricsSession;
 
   private MetricsPublishingService subject;
+  private String HOSTNAME;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws UnknownHostException {
     subject = new SimpleMetricsPublishingService(9000);
+    HOSTNAME = InetAddress.getLocalHost().getHostName();
   }
 
   @Test
@@ -49,7 +53,7 @@ class SimpleMetricsPublishingServiceTest {
   void start_addsAnHttpEndpointThatReturnsStatusOK() throws IOException {
     subject.start(metricsSession);
 
-    HttpGet request = new HttpGet("http://localhost:9000/");
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
     HttpResponse response = HttpClientBuilder.create().build().execute(request);
 
     assertThat(response.getStatusLine().getStatusCode())
@@ -62,7 +66,7 @@ class SimpleMetricsPublishingServiceTest {
   void start_addsAnHttpEndpointThatContainsRegistryData() throws IOException {
     subject.start(metricsSession);
 
-    HttpGet request = new HttpGet("http://localhost:9000/");
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
     HttpResponse response = HttpClientBuilder.create().build().execute(request);
 
     String responseBody = EntityUtils.toString(response.getEntity());
@@ -84,7 +88,7 @@ class SimpleMetricsPublishingServiceTest {
     subject.start(metricsSession);
     subject.stop();
 
-    HttpGet request = new HttpGet("http://localhost:9000/metrics");
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/metrics");
 
     assertThrows(HttpHostConnectException.class, () -> {
       HttpClientBuilder.create().build().execute(request);
