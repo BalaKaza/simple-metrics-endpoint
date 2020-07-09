@@ -46,7 +46,7 @@ class SimpleMetricsPublishingServiceTest {
 
     verify(metricsSession).addSubregistry(any(PrometheusMeterRegistry.class));
 
-    subject.stop();
+    subject.stop(metricsSession);
   }
 
   @Test
@@ -59,7 +59,7 @@ class SimpleMetricsPublishingServiceTest {
     assertThat(response.getStatusLine().getStatusCode())
         .isEqualTo(HttpStatus.SC_OK);
 
-    subject.stop();
+    subject.stop(metricsSession);
   }
 
   @Test
@@ -72,13 +72,13 @@ class SimpleMetricsPublishingServiceTest {
     String responseBody = EntityUtils.toString(response.getEntity());
     assertThat(responseBody).isEmpty();
 
-    subject.stop();
+    subject.stop(metricsSession);
   }
 
   @Test
   void stop_removesRegistryFromMetricsSession() {
     subject.start(metricsSession);
-    subject.stop();
+    subject.stop(metricsSession);
 
     verify(metricsSession).removeSubregistry(any(PrometheusMeterRegistry.class));
   }
@@ -86,7 +86,7 @@ class SimpleMetricsPublishingServiceTest {
   @Test
   void stop_hasNoHttpEndpointRunning() {
     subject.start(metricsSession);
-    subject.stop();
+    subject.stop(metricsSession);
 
     HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/metrics");
 

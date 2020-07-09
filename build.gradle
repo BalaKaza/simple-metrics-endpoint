@@ -17,6 +17,7 @@ configurations {
 
 dependencies {
   implementation "org.apache.geode:geode-core:${geodeVersion}"
+  implementation "org.apache.geode:geode-logging:${geodeVersion}"
   implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 
   bundledDependencies "io.micrometer:micrometer-registry-prometheus:${micrometerVersion}"
