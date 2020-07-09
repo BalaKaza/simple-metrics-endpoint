@@ -27,7 +27,6 @@ import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.apache.geode.StatisticDescriptor;
 import org.apache.geode.Statistics;
 import org.apache.geode.StatisticsType;
-import org.apache.geode.cache.CacheFactory;
 import org.apache.geode.distributed.internal.InternalDistributedSystem;
 import org.apache.geode.internal.logging.LoggingExecutors;
 import org.apache.geode.internal.statistics.StatisticsManager;
@@ -65,8 +64,6 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
         this.session = session;
         registry = new PrometheusMeterRegistry(DEFAULT);
         this.session.addSubregistry(registry);
-        LOG.info("Here is the Cache Name:" + CacheFactory.getAnyInstance().getName());
-        LOG.info("SimpleMetricsPublishingService.start session=" + session);
         this.executor.scheduleAtFixedRate(() -> updateMetrics(), 2000, 2000, TimeUnit.MILLISECONDS);
         try {
             HOSTNAME = InetAddress.getLocalHost().getHostName();
@@ -97,14 +94,11 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
         } else {
             List<Metric> allMetrics = new ArrayList<>();
             StatisticsManager statisticsManager = system.getStatisticsManager();
-            LOG.info("Statistics List Size:" + system.getStatisticsManager().getStatsList().size());
             for (Statistics statistics : statisticsManager.getStatsList()) {
-                LOG.info("Statistics Type:" + statistics.getType());
                 StatisticsType statisticsType = statistics.getType();
                 for (StatisticDescriptor descriptor : statisticsType.getStatistics()) {
-                    LOG.info("Statistics Type:" + descriptor.getName());
                     String statName = descriptor.getName();
-                    LOG.info("SimpleMetricsPublishingService.updateMetrics processing statName=" + statName + "statValue=" + statistics.get(statName));
+//                    LOG.info("SimpleMetricsPublishingService.updateMetrics processing statName=" + statName + "statValue=" + statistics.get(statName));
                     Metric metric = new Metric(statName, statistics.get(statName), statisticsType.getName(), statistics.getTextId());
                     allMetrics.add(metric);
                 }

@@ -28,70 +28,70 @@ import org.apache.geode.metrics.MetricsSession;
 @ExtendWith(MockitoExtension.class)
 class SimpleMetricsPublishingServiceTest {
 
-//  @Mock
-//  private MetricsSession metricsSession;
-//
-//  private MetricsPublishingService subject;
-//  private String HOSTNAME;
-//
-//  @BeforeEach
-//  void setUp() throws UnknownHostException {
-//    subject = new SimpleMetricsPublishingService(9000);
-//    HOSTNAME = InetAddress.getLocalHost().getHostName();
-//  }
-//
-//  @Test
-//  void start_addsRegistryToMetricsSession() {
-//    subject.start(metricsSession);
-//
-//    verify(metricsSession).addSubregistry(any(PrometheusMeterRegistry.class));
-//
-//    subject.stop();
-//  }
-//
-//  @Test
-//  void start_addsAnHttpEndpointThatReturnsStatusOK() throws IOException {
-//    subject.start(metricsSession);
-//
-//    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
-//    HttpResponse response = HttpClientBuilder.create().build().execute(request);
-//
-//    assertThat(response.getStatusLine().getStatusCode())
-//        .isEqualTo(HttpStatus.SC_OK);
-//
-//    subject.stop();
-//  }
-//
-//  @Test
-//  void start_addsAnHttpEndpointThatContainsRegistryData() throws IOException {
-//    subject.start(metricsSession);
-//
-//    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
-//    HttpResponse response = HttpClientBuilder.create().build().execute(request);
-//
-//    String responseBody = EntityUtils.toString(response.getEntity());
-//    assertThat(responseBody).isEmpty();
-//
-//    subject.stop();
-//  }
-//
-//  @Test
-//  void stop_removesRegistryFromMetricsSession() {
-//    subject.start(metricsSession);
-//    subject.stop();
-//
-//    verify(metricsSession).removeSubregistry(any(PrometheusMeterRegistry.class));
-//  }
-//
-//  @Test
-//  void stop_hasNoHttpEndpointRunning() {
-//    subject.start(metricsSession);
-//    subject.stop();
-//
-//    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/metrics");
-//
-//    assertThrows(HttpHostConnectException.class, () -> {
-//      HttpClientBuilder.create().build().execute(request);
-//    });
-//  }
+  @Mock
+  private MetricsSession metricsSession;
+
+  private MetricsPublishingService subject;
+  private String HOSTNAME;
+
+  @BeforeEach
+  void setUp() throws UnknownHostException {
+    subject = new SimpleMetricsPublishingService(9000);
+    HOSTNAME = InetAddress.getLocalHost().getHostName();
+  }
+
+  @Test
+  void start_addsRegistryToMetricsSession() {
+    subject.start(metricsSession);
+
+    verify(metricsSession).addSubregistry(any(PrometheusMeterRegistry.class));
+
+    subject.stop();
+  }
+
+  @Test
+  void start_addsAnHttpEndpointThatReturnsStatusOK() throws IOException {
+    subject.start(metricsSession);
+
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
+    HttpResponse response = HttpClientBuilder.create().build().execute(request);
+
+    assertThat(response.getStatusLine().getStatusCode())
+        .isEqualTo(HttpStatus.SC_OK);
+
+    subject.stop();
+  }
+
+  @Test
+  void start_addsAnHttpEndpointThatContainsRegistryData() throws IOException {
+    subject.start(metricsSession);
+
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/");
+    HttpResponse response = HttpClientBuilder.create().build().execute(request);
+
+    String responseBody = EntityUtils.toString(response.getEntity());
+    assertThat(responseBody).isEmpty();
+
+    subject.stop();
+  }
+
+  @Test
+  void stop_removesRegistryFromMetricsSession() {
+    subject.start(metricsSession);
+    subject.stop();
+
+    verify(metricsSession).removeSubregistry(any(PrometheusMeterRegistry.class));
+  }
+
+  @Test
+  void stop_hasNoHttpEndpointRunning() {
+    subject.start(metricsSession);
+    subject.stop();
+
+    HttpGet request = new HttpGet("http://" + HOSTNAME + ":9000/metrics");
+
+    assertThrows(HttpHostConnectException.class, () -> {
+      HttpClientBuilder.create().build().execute(request);
+    });
+  }
 }
