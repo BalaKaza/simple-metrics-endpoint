@@ -99,7 +99,7 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
                 for (StatisticDescriptor descriptor : statisticsType.getStatistics()) {
                     String statName = descriptor.getName();
 //                    LOG.info("SimpleMetricsPublishingService.updateMetrics processing statName=" + statName + "statValue=" + statistics.get(statName));
-                    Metric metric = new Metric(statName, statistics.get(statName), statisticsType.getName(), statistics.getTextId());
+                    Metric metric = new Metric("geode_" + statName, statistics.get(statName), statisticsType.getName(), statistics.getTextId());
                     allMetrics.add(metric);
                 }
             }
