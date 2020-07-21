@@ -42,8 +42,8 @@ To specify a port,
 set the `prometheus.metrics.port` system property
 when you start the locator or server:
 ```
-gfsh> start locator [...] --J=-Dprometheus.metrics.port=<my-port-number>
-gfsh> start server [...] --J=-Dprometheus.metrics.port=<my-port-number>
+gfsh> start locator [...] --J=-Dprometheus.metrics.mport=<my-port-number>
+gfsh> start server [...] --J=-Dprometheus.metrics.mport=<my-port-number>
 ```
 
 Now you can configure your Prometheus server
