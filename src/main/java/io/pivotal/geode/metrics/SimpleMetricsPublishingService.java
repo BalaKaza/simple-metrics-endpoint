@@ -19,7 +19,7 @@ import org.apache.geode.metrics.MetricsPublishingService;
 import org.apache.geode.metrics.MetricsSession;
 
 public class SimpleMetricsPublishingService implements MetricsPublishingService {
-    private static final String PORT_PROPERTY = "prometheus.metrics.mport";
+    private static final String PORT_PROPERTY = "prometheus.metrics.port";
     private static final int DEFAULT_PORT = 0; // If no port specified, use any port
     private static String HOSTNAME = "localhost";
     private static final int PORT = getInteger(PORT_PROPERTY, DEFAULT_PORT);
