@@ -40,6 +40,18 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
     @Override
     public void start(MetricsSession session) {
         this.session = session;
+        initializeMeterRegistry();
+        initializeMetricsEndpoint();
+    }
+
+    @Override
+    public void stop(MetricsSession session) {
+        session.removeSubregistry(registry);
+        registry = null;
+        server.stop(0);
+    }
+
+    private void initializeMeterRegistry(){
         registry = new PrometheusMeterRegistry(DEFAULT);
         MeterFilter meterFilter = new MeterFilter() {
             @Override
@@ -48,27 +60,23 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
             }
         };
         registry.config().meterFilter(meterFilter);
-        this.session.addSubregistry(registry);
+        session.addSubregistry(registry);
+    }
+
+    private void initializeMetricsEndpoint(){
         try {
             HOSTNAME = InetAddress.getLocalHost().getHostName();
-            System.out.println(HOSTNAME);
+            server = HttpServer.create(new InetSocketAddress(HOSTNAME, port), 0);
+            HttpContext context = server.createContext("/");
+            context.setHandler(this::requestHandler);
+            server.start();
+            LOG.info("Started {} http://{}:{}/", getClass().getSimpleName(), HOSTNAME,  server.getAddress().getPort());
         } catch (UnknownHostException e) {
+            LOG.error("Unknown host exception while starting metrics endpoint.");
             e.printStackTrace();
-        }
-
-        InetSocketAddress address = new InetSocketAddress(HOSTNAME, port);
-        server = null;
-        try {
-            server = HttpServer.create(address, 0);
         } catch (IOException thrown) {
             LOG.error("Exception while starting " + getClass().getSimpleName(), thrown);
         }
-        HttpContext context = server.createContext("/");
-        context.setHandler(this::requestHandler);
-        server.start();
-
-        int boundPort = server.getAddress().getPort();
-        LOG.info("Started {} http://{}:{}/", getClass().getSimpleName(), HOSTNAME, boundPort);
     }
 
     private void requestHandler(HttpExchange httpExchange) throws IOException {
@@ -77,12 +85,5 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
         final OutputStream responseBody = httpExchange.getResponseBody();
         responseBody.write(scrapeBytes);
         responseBody.close();
-    }
-
-    @Override
-    public void stop(MetricsSession session) {
-        session.removeSubregistry(registry);
-        registry = null;
-        server.stop(0);
     }
 }
