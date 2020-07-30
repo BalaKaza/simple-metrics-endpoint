@@ -23,7 +23,7 @@ resources:
   source:
     username: ((dev-registry-username))
     password: ((dev-registry-password))
-    repository: dev.registry.pivotal.io/tanzugemfire/prometheus-metrics
+    repository: dev.registry.pivotal.io/tanzu-gemfire-for-kubernetes/prometheus-metrics
 
 - name: metrics-build-version
   type: semver
