@@ -143,7 +143,7 @@ public class SimpleMetricsPublishingService implements MetricsPublishingService 
                 .and("category", metric.getCategory())
                 .and("type", metric.getType());
         Gauge
-                .builder(metric.getName(), this, provider -> provider.getServerMetric(serverName, metric))
+                .builder(metric.getCategory()+metric.getName(), this, provider -> provider.getServerMetric(serverName, metric))
                 .tags(tags)
                 .register(this.registry);
         addServerMetric(serverName, metric);
