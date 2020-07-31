@@ -4,8 +4,8 @@ RUN apt-get update \
  && apt-get install -y git
 
 ARG SSH_PRIVATE_KEY
-RUN mkdir /root/.ssh/
- && echo "${SSH_PRIVATE_KEY}" > /root/.ssh/id_rsa
+RUN mkdir /root/.ssh/ \
+ && echo "${SSH_PRIVATE_KEY}" > /root/.ssh/id_rsa \
  && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
 
 RUN mkdir /home/workspace \
