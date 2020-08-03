@@ -4,12 +4,12 @@ resources:
   source:
     repository: vito/oci-build-task
 
-- name: tanzu-integrations-source
+- name: metrics-source
   type: git
   source:
-    uri: git@github.com:gemfire/tanzu-integrations.git
+    uri: git@github.com:BalaKaza/simple-metrics-endpoint.git
     private_key: ((gemfire-ci-private-key))
-    branch: master
+    branch: wip-collect-more-stats
 
 - name: adoptopenjdk-hotspot-image
   type: registry-image
@@ -23,7 +23,7 @@ resources:
   source:
     username: ((dev-registry-username))
     password: ((dev-registry-password))
-    repository: dev.registry.pivotal.io/tanzu-gemfire-for-kubernetes/geode-metrics
+    repository: dev.registry.pivotal.io/tanzu-gemfire-for-kubernetes/prometheus-metrics
 
 - name: metrics-build-version
   type: semver
@@ -32,83 +32,81 @@ resources:
     driver: gcs
     initial_version: 0.0.1
     json_key: ((concourse-gcp-key))
-    key: semvers/geode-for-kubernetes/geode-metrics/version
+    key: semvers/geode-for-kubernetes/metrics/version
 
 jobs:
 - name: UnitTest
   serial: true
   plan:
-    - in_parallel:
-        - get: tanzu-integrations-source
-          trigger: true
-        - get: metrics-build-version
-          params:
-            pre: build
-        - get: adoptopenjdk-hotspot-image
-    - task: unit-test
-      image: adoptopenjdk-hotspot-image
-      config:
-        platform: linux
-        inputs:
-          - name: tanzu-integrations-source
-          - name: metrics-build-version
-        run:
-          path: bash
-          args:
-            - -exc
-            - |
-              pushd tanzu-integrations-source/enhanced-metrics
-              ./gradlew test
-              popd
-    - put: metrics-build-version
+  - in_parallel:
+    - get: metrics-source
+      trigger: true
+    - get: metrics-build-version
       params:
-        file: metrics-build-version/number
+        pre: build
+    - get: adoptopenjdk-hotspot-image
+  - task: unit-test
+    image: adoptopenjdk-hotspot-image
+    config:
+      platform: linux
+      inputs:
+      - name: metrics-source
+      - name: metrics-build-version
+      run:
+        path: bash
+        args:
+          - -exc
+          - |
+            pushd metrics-source
+            ./gradlew test
+            popd
+  - put: metrics-build-version
+    params:
+      file: metrics-build-version/number
 
 - name: BuildMetricsImage
   serial: true
   plan:
-    - in_parallel:
-        - get: metrics-build-version
-          passed:
-            - UnitTest
-        - get: tanzu-integrations-source
-          passed:
-            - UnitTest
-          trigger: true
-        - get: oci-build-task-image
-        - get: adoptopenjdk-hotspot-image
-    - task: generate-docker-creds
-      image: adoptopenjdk-hotspot-image
-      config:
-        platform: linux
-        outputs:
-          - name: docker-creds
-        run:
-          path: bash
-          args:
-            - -ec
-            - |
-              AUTH="$(echo -n '((dev-registry-username)):((dev-registry-password))' | base64 -w 0)"
-              CONFIG='{ "auths": { "dev.registry.pivotal.io": { "auth": "'"${AUTH}"'" }}}'
-              echo "${CONFIG}" > docker-creds/config.json
-    - task: build-metrics-image
-      image: oci-build-task-image
-      privileged: true
-      config:
-        platform: linux
-        params:
-          CONTEXT: tanzu-integrations-source
-          DOCKERFILE: tanzu-integrations-source/enhanced-metrics/ci/images/geode-metrics/Dockerfile
-          DOCKER_CONFIG: docker-creds
-          BUILD_ARG_BASE_IMAGE: golang
-          BUILD_ARG_SSH_PRIVATE_KEY: ((gemfire-ci-private-key))
-        inputs:
-          - name: tanzu-integrations-source
-        outputs:
-          - name: image
-        run:
-          path: build
-    - put: metrics-registry-image
+  - in_parallel:
+    - get: metrics-build-version
+      passed:
+        - UnitTest
+    - get: metrics-source
+      passed:
+        - UnitTest
+    - get: oci-build-task-image
+    - get: adoptopenjdk-hotspot-image
+  - task: generate-docker-creds
+    image: adoptopenjdk-hotspot-image
+    config:
+      platform: linux
+      outputs:
+        - name: docker-creds
+      run:
+        path: bash
+        args:
+          - -ec
+          - |
+            AUTH="$(echo -n '((dev-registry-username)):((dev-registry-password))' | base64 -w 0)"
+            CONFIG='{ "auths": { "dev.registry.pivotal.io": { "auth": "'"${AUTH}"'" }}}'
+            echo "${CONFIG}" > docker-creds/config.json
+  - task: build-metrics-image
+    image: oci-build-task-image
+    privileged: true
+    config:
+      platform: linux
       params:
-        image: image/image.tar
-        additional_tags: metrics-build-version/number
+        CONTEXT: metrics-source
+        DOCKERFILE: metrics-source/ci/images/prometheus-metrics/Dockerfile
+        DOCKER_CONFIG: docker-creds
+        BUILD_ARG_BASE_IMAGE: golang
+      inputs:
+        - name: metrics-source
+      outputs:
+        - name: image
+      run:
+        path: build
+  - put: metrics-registry-image
+    params:
+      image: image/image.tar
+      additional_tags: metrics-build-version/number
